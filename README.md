@@ -1,1 +1,1 @@
-# TP-Teor-a-de-Computaci-n
+# TP-Teoria-de-Computacion
