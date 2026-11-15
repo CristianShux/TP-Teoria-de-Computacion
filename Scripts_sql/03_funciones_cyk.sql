@@ -16,20 +16,29 @@ BEGIN
         WHERE g.tipo_produccion = 1 AND g.parte_der1 = c.simbolo), ARRAY[]::text[])
         FROM cadena_cyk c;
     ELSE
-        -- Caso inductivo: Xij = {A | A -> B C, B en Xik, C en X(k+1)j, i <= k < j}
-        FOR v_i IN 1 .. (n - fila + 1) LOOP
-            v_j := v_i + fila - 1;
+    -- Caso inductivo: Xij = {A | A -> B C, B en Xik, C en X(k+1)j, i <= k < j}
+    FOR v_i IN 1 .. (n - fila + 1) LOOP
+        v_j := v_i + fila - 1;
 
-            INSERT INTO matriz_cyk (i, j, x)
-            SELECT v_i, v_j,
-            COALESCE(array_agg(DISTINCT g.parte_izq ORDER BY g.parte_izq), ARRAY[]::text[])
-            FROM generate_series(v_i, v_j - 1) AS s(k)
-            JOIN matriz_cyk m1 ON m1.i = v_i AND m1.j = s.k
-            JOIN matriz_cyk m2 ON m2.i = s.k + 1 AND m2.j = v_j
-            JOIN GLC_en_FNC g  ON g.tipo_produccion = 2 AND g.parte_der1 = ANY (m1.x) AND g.parte_der2 = ANY (m2.x);
-        END LOOP;
-    END IF;
-END;
+        -- Primero creamos la celda vacía para (i, j)
+        INSERT INTO matriz_cyk (i, j, x) VALUES (v_i, v_j, ARRAY[]::text[]);
+
+        -- Luego cruzamos todas las particiones k y actualizamos la celda existente
+        UPDATE matriz_cyk m_update
+        SET x = ARRAY(
+            SELECT DISTINCT unnest(x || (
+                SELECT COALESCE(array_agg(DISTINCT g.parte_izq), ARRAY[]::text[])
+                FROM generate_series(v_i, v_j - 1) AS s(k)
+                JOIN matriz_cyk m1 ON m1.i = v_i AND m1.j = s.k
+                JOIN matriz_cyk m2 ON m2.i = s.k + 1 AND m2.j = v_j
+                JOIN GLC_en_FNC g ON g.tipo_produccion = 2 AND g.parte_der1 = ANY (m1.x) AND g.parte_der2 = ANY (m2.x)
+            ))
+            ORDER BY 1
+        )
+        WHERE m_update.i = v_i AND m_update.j = v_j;
+
+    END LOOP;
+END IF;
 $$ LANGUAGE plpgsql;
 
 

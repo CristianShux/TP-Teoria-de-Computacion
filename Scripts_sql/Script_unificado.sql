@@ -4,6 +4,7 @@
 --Eliminar las tablas si existen
 DROP TABLE IF EXISTS GLC_en_FNC;
 DROP TABLE IF EXISTS matriz_cyk;
+DROP TABLE IF EXISTS cadena_cyk;
 
 -- Create the GLC_en_FNC table
 CREATE TABLE GLC_en_FNC (
@@ -21,8 +22,15 @@ CREATE TABLE matriz_cyk (
     x text[] --Este es un vector de tipo text para almacenar el conjunto de variables Xij
 	);
 
--- 02 isnerts_gramatica.sql
--- Este script inserta las producciones de la gramática en la tabla GLC_en_FNC.
+--Crear la tabla cadena_cyk
+--Esta tabla representa el string de entrada desarmado caracter por caracter, con su respectiva posición en la cadena. Esto es útil para la construcción de la matriz CYK.
+--La idea as pos 1: { 
+--pos 2: "
+
+CREATE TABLE cadena_cyk (
+    pos int,
+    simbolo text
+);
 
 Truncate table GLC_en_FNC;
 
@@ -312,19 +320,28 @@ BEGIN
         WHERE g.tipo_produccion = 1 AND g.parte_der1 = c.simbolo), ARRAY[]::text[])
         FROM cadena_cyk c;
     ELSE
-        -- Caso inductivo: Xij = {A | A -> B C, B en Xik, C en X(k+1)j, i <= k < j}
-        FOR v_i IN 1 .. (n - fila + 1) LOOP
-            v_j := v_i + fila - 1;
+    -- Caso inductivo: Xij = {A | A -> B C, B en Xik, C en X(k+1)j, i <= k < j}
+    FOR v_i IN 1 .. (n - fila + 1) LOOP
+        v_j := v_i + fila - 1;
 
-            INSERT INTO matriz_cyk (i, j, x)
-            SELECT v_i, v_j,
-            COALESCE(array_agg(DISTINCT g.parte_izq ORDER BY g.parte_izq), ARRAY[]::text[])
-            FROM generate_series(v_i, v_j - 1) AS s(k)
-            JOIN matriz_cyk m1 ON m1.i = v_i AND m1.j = s.k
-            JOIN matriz_cyk m2 ON m2.i = s.k + 1 AND m2.j = v_j
-            JOIN GLC_en_FNC g  ON g.tipo_produccion = 2 AND g.parte_der1 = ANY (m1.x) AND g.parte_der2 = ANY (m2.x);
-        END LOOP;
-    END IF;
+        -- Primero creamos la celda vacía para (i, j)
+        INSERT INTO matriz_cyk (i, j, x) VALUES (v_i, v_j, ARRAY[]::text[]);
+
+        -- Luego cruzamos todas las particiones k y actualizamos la celda existente
+        UPDATE matriz_cyk m_update
+        SET x = ARRAY(
+            SELECT DISTINCT unnest(x || (
+                SELECT COALESCE(array_agg(DISTINCT g.parte_izq), ARRAY[]::text[])
+                FROM generate_series(v_i, v_j - 1) AS s(k)
+                JOIN matriz_cyk m1 ON m1.i = v_i AND m1.j = s.k
+                JOIN matriz_cyk m2 ON m2.i = s.k + 1 AND m2.j = v_j
+                JOIN GLC_en_FNC g ON g.tipo_produccion = 2 AND g.parte_der1 = ANY (m1.x) AND g.parte_der2 = ANY (m2.x)
+            ))
+            ORDER BY 1
+        )
+        WHERE m_update.i = v_i AND m_update.j = v_j;
+    END LOOP;
+END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -366,4 +383,3 @@ BEGIN
     RETURN resultado;
 END;
 $$ LANGUAGE plpgsql;
-
