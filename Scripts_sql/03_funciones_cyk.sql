@@ -39,6 +39,7 @@ BEGIN
 
     END LOOP;
 END IF;
+END;
 $$ LANGUAGE plpgsql;
 
 
