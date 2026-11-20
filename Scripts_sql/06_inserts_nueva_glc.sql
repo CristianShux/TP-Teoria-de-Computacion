@@ -46,4 +46,4 @@ SELECT 'Test 1 - Suma simple (1+1):' AS caso, cyk('1+1') AS resultado;
 SELECT 'Test 2 - Suma encadenada (1+2+3):' AS caso, cyk('1+2+3') AS resultado;
 SELECT 'Test 3 - Precedencia y paréntesis ((12+3)*4):' AS caso, cyk('(12+3)*4') AS resultado;
 SELECT 'Test 4 - Inválido operador suelto (1+):' AS caso, cyk('1+') AS resultado;
-SELECT 'Test 5 - Inválido paréntesis sin cerrar ((1+2)*3):' AS caso, cyk('(1+2)*3') AS resultado;
+SELECT 'Test 5 - Inválido paréntesis sin cerrar ((1+2)*3:' AS caso, cyk('((1+2)*3') AS resultado;
