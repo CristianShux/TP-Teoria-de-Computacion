@@ -37,7 +37,7 @@ INSERT INTO GLC_en_FNC (start, parte_izq, parte_der1, parte_der2, tipo_produccio
 
 -- Dígitos 0..9 (como E, T, F y NUM pueden derivar en un solo dígito tras eliminar unitarias)
 INSERT INTO GLC_en_FNC (start, parte_izq, parte_der1, parte_der2, tipo_produccion)
-SELECT v.izq, v.izq, d.dig, NULL, 1
+SELECT false, v.izq, d.dig, NULL, 1
 FROM (VALUES ('E'), ('T'), ('F'), ('NUM'), ('DIGITO')) AS v(izq)
 CROSS JOIN (VALUES ('0'),('1'),('2'),('3'),('4'),('5'),('6'),('7'),('8'),('9')) AS d(dig);
 
