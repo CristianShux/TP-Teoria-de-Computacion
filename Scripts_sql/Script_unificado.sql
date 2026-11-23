@@ -24,8 +24,6 @@ CREATE TABLE matriz_cyk (
 
 --Crear la tabla cadena_cyk
 --Esta tabla representa el string de entrada desarmado caracter por caracter, con su respectiva posición en la cadena. Esto es útil para la construcción de la matriz CYK.
---La idea as pos 1: { 
---pos 2: "
 
 CREATE TABLE cadena_cyk (
     pos int,

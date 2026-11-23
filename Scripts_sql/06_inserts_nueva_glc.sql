@@ -1,14 +1,9 @@
 -- 06_inserts_nueva_glc.sql
--- Borrar la GLC de JSON anterior para que no acepte combinaciones híbridas inválidas
 
 TRUNCATE TABLE GLC_en_FNC;
 
 -- Gramática aritmética en FNC:
 -- Reconoce enteros de 1 o más dígitos (0..9), operadores '+' y '*', y paréntesis '( )'
--- Símbolo inicial: E (Expresión)
-
--- Reglas binarias (tipo_produccion = 2)
--- E -> E X1 | T X2 | DIGITO NUM | PAR_A X3
 INSERT INTO GLC_en_FNC (start, parte_izq, parte_der1, parte_der2, tipo_produccion) VALUES (true,  'E',      'E',      'X1',     2);
 INSERT INTO GLC_en_FNC (start, parte_izq, parte_der1, parte_der2, tipo_produccion) VALUES (true,  'E',      'T',      'X2',     2);
 INSERT INTO GLC_en_FNC (start, parte_izq, parte_der1, parte_der2, tipo_produccion) VALUES (true,  'E',      'DIGITO', 'NUM',    2);

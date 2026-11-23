@@ -1,4 +1,4 @@
--- 02 isnerts_gramatica.sql
+-- 02 inserts_gramatica.sql
 -- Este script inserta las producciones de la gramática en la tabla GLC_en_FNC.
 
 Truncate table GLC_en_FNC;
